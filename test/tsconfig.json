@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2015",
+    "outDir": "../build",
+    "strictNullChecks": false
+  },
+  "include": [
+    "*.ts",
+    "../src/*.ts",
+    "../node_modules/@types/mocha/index.d.ts",
+    "../node_modules/@types/node/index.d.ts"
+  ]
+}

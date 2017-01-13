@@ -1,0 +1,44 @@
+{
+  "name": "thing-unionstruct",
+  "version": "0.1.0",
+  "description": "C-style struct, union and bitfield views of ArrayBuffers",
+  "main": "./lib/index.js",
+  "scripts": {
+    "build": "rm -rf lib && tsc --declaration",
+    "clean": "rm -rf build lib node_modules",
+    "test": "tsc -p test && mocha build/test/*.js"
+  },
+  "keywords": [
+    "abi",
+    "binary",
+    "bitfield",
+    "c",
+    "cpp",
+    "struct",
+    "typescript",
+    "union"
+  ],
+  "author": "Karsten Schmidt <k+npm@thi.ng>",
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thi-ng/unionstruct.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thi-ng/unionstruct/issues"
+  },
+  "homepage": "https://github.com/thi-ng/unionstruct",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/mocha": "2.2.*",
+    "@types/node": "6.0.*"
+  },
+  "typings": "./lib/index.d.ts",
+  "directories": {
+    "lib": "./lib"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+}
