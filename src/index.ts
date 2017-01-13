@@ -9,7 +9,7 @@ const TYPES = {
     "i8": [8, "Int", true],
 };
 
-function align(bitOffset: number, type: string, spec: any) {
+let align = (bitOffset: number, type: string, spec: any) => {
     if (type == "union") {
         spec = (spec.__spec || spec);
         let a = 0, f;
@@ -24,22 +24,20 @@ function align(bitOffset: number, type: string, spec: any) {
     }
     let block = TYPES[type][0];
     return block > 8 ? (bitOffset + block - 1) & -block : bitOffset;
-}
+};
 
-function isBitField(f: any[]) {
-    return typeof f[2] === "number" && /^(u|i)\d+$/.test(f[1]);
-}
+let isBitField = (f: any[]) => typeof f[2] === "number" && /^(u|i)\d+$/.test(f[1]);
 
-function maybePad(offset: number, spec: any[], i: number) {
-    let f = spec[i], width, base, pad;
+let maybePad = (offset: number, spec: any[], i: number) => {
+    let f = spec[i], width;
     if (i == spec.length - 1 || !isBitField(spec[i + 1])) {
         width = TYPES[f[1]][0];
         offset += ((offset + width) & ~(width - 1)) - offset;
     }
     return offset;
-}
+};
 
-export function sizeOf(fields: any[], bitOffset = 0, doAlign = true, union = false) {
+export let sizeOf = (fields: any[], bitOffset = 0, doAlign = true, union = false) => {
     for (let i = 0; i < fields.length; i++) {
         let f = fields[i], type = f[1], spec = f[2], isBF = isBitField(f);
         bitOffset = doAlign && !isBF ? align(bitOffset, type, spec) : bitOffset;
@@ -53,37 +51,37 @@ export function sizeOf(fields: any[], bitOffset = 0, doAlign = true, union = fal
         }
     }
     return bitOffset;
-}
+};
 
-function bitReader(dv: DataView, byteOffset: number, bit: number, size: number) {
-    let b = bit - size;
+let bitReader = (dv: DataView, byteOffset: number, bit: number, size: number) => {
+    let b = bit - size, g = "getUint32";
     if (b >= 0) {
-        return () => dv.getUint32(byteOffset, false) >>> b & (1 << size) - 1;
+        return () => dv[g](byteOffset, false) >>> b & (1 << size) - 1;
     }
-    return () => ((dv.getUint32(byteOffset, false) & (1 << bit) - 1) << -b) |
-        (dv.getUint32(byteOffset + 4, false) >>> (32 + b));
-}
+    return () => ((dv[g](byteOffset, false) & (1 << bit) - 1) << -b) |
+        (dv[g](byteOffset + 4, false) >>> (32 + b));
+};
 
-function bitWriter(dv: DataView, byteOffset: number, bit: number, size: number) {
+let bitWriter = (dv: DataView, byteOffset: number, bit: number, size: number) => {
     let b = bit - size,
-        m = bit < 32 ? ~((1 << bit) - 1) : 0;
+        m = bit < 32 ? ~((1 << bit) - 1) : 0,
+        g = "getUint32",
+        s = "setUint32";
     if (b >= 0) {
         m |= (1 << b) - 1;
         return (x) => {
-            x &= (1 << size) - 1;
-            dv.setUint32(byteOffset, (dv.getUint32(byteOffset, false) & m) | (x << b & ~m), false);
+            dv[s](byteOffset, (dv[g](byteOffset, false) & m) | (x << b & ~m), false);
         };
     } else {
         let bb = 32 + b;
         return (x) => {
-            x &= (1 << size) - 1;
-            dv.setUint32(byteOffset, (dv.getUint32(byteOffset, false) & m) | (x >>> -b & ~m), false);
-            dv.setUint32(byteOffset + 4, (dv.getUint32(byteOffset + 4, false) & (1 << bb) - 1) | x << bb, false);
+            dv[s](byteOffset, (dv[g](byteOffset, false) & m) | (x >>> -b & ~m), false);
+            dv[s](byteOffset + 4, (dv[g](byteOffset + 4, false) & (1 << bb) - 1) | x << bb, false);
         }
     }
-}
+};
 
-function makeField(field: any[], obj: any, dv: DataView, bitOffset: number, doAlign: boolean, le: boolean) {
+let makeField = (field: any[], obj: any, dv: DataView, bitOffset: number, doAlign: boolean, le: boolean) => {
     let [id, type, size] = field,
         isBF = isBitField(field);
     bitOffset = doAlign && !isBF ? align(bitOffset, type, size) : bitOffset;
@@ -127,9 +125,9 @@ function makeField(field: any[], obj: any, dv: DataView, bitOffset: number, doAl
         });
     }
     return bitOffset;
-}
+};
 
-export function typedef(spec: any[], struct: boolean, buf?: ArrayBuffer, offset = 0, doAlign = true, le = false) {
+export let typedef = (spec: any[], struct: boolean, buf?: ArrayBuffer, offset = 0, doAlign = true, le = false) => {
     let size = sizeOf(spec, 0, doAlign, !struct) >>> 3,
         dv = new DataView(buf || new ArrayBuffer(size)),
         off = offset << 3,
@@ -150,12 +148,12 @@ export function typedef(spec: any[], struct: boolean, buf?: ArrayBuffer, offset 
         }
     }
     return obj;
-}
+};
 
-export function union(spec: any[], buf?: ArrayBuffer, offset = 0, doAlign = true, le = false) {
+export let union = (spec: any[], buf?: ArrayBuffer, offset?: number, doAlign?: boolean, le?: boolean) => {
     return typedef(spec, false, buf, offset, doAlign, le);
 }
 
-export function struct(spec: any[], buf?: ArrayBuffer, offset = 0, doAlign = true, le = false) {
+export let struct = (spec: any[], buf?: ArrayBuffer, offset?: number, doAlign?: boolean, le?: boolean) => {
     return typedef(spec, true, buf, offset, doAlign, le);
 }
